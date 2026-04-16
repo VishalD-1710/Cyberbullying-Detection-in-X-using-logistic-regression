@@ -30,6 +30,7 @@ TF-IDF Vectorizer
 Tweepy (Twitter API integration)
 
 **Methodology**
+
 **1. Data Collection**
 Collected labeled dataset of tweets (offensive and non-offensive)
 Integrated Twitter API for real-time data
