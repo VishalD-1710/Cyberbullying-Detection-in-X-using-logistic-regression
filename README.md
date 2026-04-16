@@ -10,6 +10,7 @@ Enable real-time monitoring using Twitter API
 Provide a logging mechanism for flagged content
 
 **Key Features**
+
 Real-time tweet and reply monitoring using Twitter API
 Text preprocessing including cleaning and normalization
 TF-IDF based feature extraction
@@ -58,9 +59,13 @@ Generated CSV files for analysis
 
 **Results**
 The model achieved strong performance on the test dataset:
+
 Accuracy: ~90%
+
 Precision: High
+
 Recall: High
+
 F1-score: Balanced
 
 The system performs efficiently in real-time with low latency and effectively identifies offensive content.
