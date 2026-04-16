@@ -19,9 +19,13 @@ Scalable and low computational cost solution
 
 **Tech Stack**
 Python
+
 Scikit-learn
+
 Pandas and NumPy
+
 TF-IDF Vectorizer
+
 Tweepy (Twitter API integration)
 
 **Methodology**
