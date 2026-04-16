@@ -1,0 +1,158 @@
+import re
+import os
+import tweepy
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+# Twitter API Credentials
+BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAACD0zgEAAAAAdbSJcoWY99Kjw2T55ip5WWGNnwk%3DIKZFlHzNOxCdexNnRtl3wfOJo4yOVQDdnymaAXNN9F5QTDhINb"
+API_KEY = "hxxHUmzDl9efoEYndBDgN61xt"
+API_SECRET = "b0sY1EEqc0ToNQMOevrHceTT5rLXLSM0XNPXXwr4mm1KGNDBPG"
+ACCESS_TOKEN = "1897304447501598721-InGzlZjEhjcOf5BE2gmQBGOHUllVA8"
+ACCESS_SECRET = "mZoE7hh9Oc8duhFv5m4o3KGSK39pZf2ffmDADksoyX72j"
+
+#  Load Cyberbullying Dataset
+df = pd.read_csv("/content/drive/MyDrive/English_profanity_words.csv").dropna()
+df.columns = df.columns.str.strip()
+df["is_offensive"] = df["is_offensive"].astype(int)
+
+# Load Offensive Words List (en.txt)
+with open("/content/drive/MyDrive/en.txt", "r", encoding="utf-8") as file:
+    offensive_words = set(word.strip().lower() for word in file.readlines())
+
+# Text Cleaning Function
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'\s+', ' ', text)  # Remove extra spaces
+    text = re.sub(r'[^a-zA-Z0-9\s.,!?]', '', text)  # Remove special characters
+    return text.strip()
+
+df["text"] = df["text"].apply(clean_text)
+
+# Augment Dataset (Mark More Offensive Comments)
+def check_offensive(text):
+    words = set(text.split())
+    return 1 if words.intersection(offensive_words) else 0
+
+df["is_offensive"] = df.apply(lambda row: 1 if row["is_offensive"] == 1 or check_offensive(row["text"]) else 0, axis=1)
+
+#  Split Data into Train and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(df["text"], df["is_offensive"], test_size=0.2, random_state=42)
+
+#  Convert Text to TF-IDF Vectors
+vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
+X_train_tfidf = vectorizer.fit_transform(X_train)
+X_test_tfidf = vectorizer.transform(X_test)
+
+#  Train Logistic Regression Model
+lr = LogisticRegression()
+lr.fit(X_train_tfidf, y_train)
+
+#  Evaluate Model
+lr_preds = lr.predict(X_test_tfidf)
+print("\nLogistic Regression Accuracy:", accuracy_score(y_test, lr_preds))
+print(classification_report(y_test, lr_preds))
+
+#  Authenticate with Tweepy (API v2 and v1.1 as needed)
+client = tweepy.Client(bearer_token=BEARER_TOKEN, consumer_key=API_KEY,
+                       consumer_secret=API_SECRET, access_token=ACCESS_TOKEN,
+                       access_token_secret=ACCESS_SECRET)
+
+auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
+api = tweepy.API(auth)
+
+#  Get User ID
+def get_user_id(username):
+    """Fetch user ID from username."""
+    user = client.get_user(username=username)
+    return user.data.id if user.data else None
+
+#  Get Latest Tweets (User's posts)
+def get_latest_tweets(user_id, max_results=5):
+    """Fetch latest tweets from a user."""
+    tweets = client.get_users_tweets(user_id, max_results=max_results)
+    return [tweet.id for tweet in tweets.data] if tweets.data else []
+
+#  Get Replies to User's Tweets (Filter out replies from the user themselves)
+def get_replies(username, tweet_ids, target_user_id):
+    """
+    Fetch replies to the user's tweets by searching for tweets directed to the username,
+    then filtering to include only those replies whose conversation_id matches the tweet ids,
+    and excluding any replies made by the target user.
+    """
+    query = f"to:{username} -is:retweet"
+    tweets = client.search_recent_tweets(query=query, tweet_fields=["conversation_id", "author_id", "text"])
+    replies = []
+    if tweets.data:
+        for tweet in tweets.data:
+            # Check if the reply belongs to one of the user's posts
+            if str(tweet.conversation_id) in [str(tid) for tid in tweet_ids]:
+                # Exclude replies posted by the target user themselves
+                if tweet.author_id != target_user_id:
+                    replies.append({"id": tweet.id, "text": tweet.text, "author_id": tweet.author_id})
+    return replies
+
+#  Detect Offensive Comments Using Logistic Regression
+def detect_abuse(text):
+    """Check if a reply contains offensive language using the trained ML model."""
+    text = clean_text(text)
+    text_vector = vectorizer.transform([text])
+    prediction = lr.predict(text_vector)[0]
+    return prediction == 1  # Returns True if offensive
+
+#  Function to Save CSV in Colab and Trigger Download
+def save_csv_in_colab(data, filename="abusive_comments.csv"):
+    """
+    Saves the provided data (list of dictionaries) as a CSV file in the /content directory,
+    then triggers a download.
+    """
+    csv_file_path = os.path.join("/content", filename)
+    df_csv = pd.DataFrame(data)
+    df_csv.to_csv(csv_file_path, index=False)
+    print(f"CSV file saved to {csv_file_path}")
+    # Trigger file download
+    from google.colab import files
+    files.download(csv_file_path)
+
+#  Target Twitter User
+USERNAME = "Vishal899341687"
+
+#  Main Process
+user_id = get_user_id(USERNAME)
+if user_id:
+    print(f"User ID of @{USERNAME}: {user_id}")
+
+    #  Fetch Recent Tweets (user's posts)
+    tweet_ids = get_latest_tweets(user_id)
+    print(f"Fetched {len(tweet_ids)} latest tweets.")
+
+    abusive_comments = []
+    if tweet_ids:
+        # Fetch Replies to the user's tweets, excluding replies from the user themselves
+        replies = get_replies(USERNAME, tweet_ids, user_id)
+        print(f"Found {len(replies)} replies on the user's posts.")
+
+
+        #  Check Replies for Offensive Content
+        for reply in replies:
+            if detect_abuse(reply["text"]):
+                print(f"\n Offensive Reply Detected! ")
+                print(f"User ID: {reply['author_id']}")
+                print(f"Reply: {reply['text']}")
+                abusive_comments.append(reply)
+            else:
+                print(f" Safe Reply: {reply['text']}")
+
+        #  Save Abusive Comments to CSV in Colab and Trigger Download if Any
+        if abusive_comments:
+            save_csv_in_colab(abusive_comments)
+        else:
+            print("No abusive comments to save.")
+    else:
+        print("No tweets found.")
+else:
+    print("User not found.")
