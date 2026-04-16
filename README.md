@@ -18,6 +18,7 @@ Automated logging of offensive tweets into CSV files
 Scalable and low computational cost solution
 
 **Tech Stack**
+
 Python
 
 Scikit-learn
