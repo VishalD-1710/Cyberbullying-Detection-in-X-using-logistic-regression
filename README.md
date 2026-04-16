@@ -2,11 +2,13 @@
 
 **Overview**
 This project focuses on detecting cyberbullying in social media platforms such as X (Twitter) using a Machine Learning approach. The system classifies user-generated text into offensive and non-offensive categories in real time. It combines Logistic Regression with TF-IDF feature extraction to achieve accurate and efficient text classification.
+
 **Objectives**
 Detect offensive and abusive language in social media content
 Build a lightweight and interpretable machine learning model
 Enable real-time monitoring using Twitter API
 Provide a logging mechanism for flagged content
+
 **Key Features**
 Real-time tweet and reply monitoring using Twitter API
 Text preprocessing including cleaning and normalization
@@ -14,12 +16,14 @@ TF-IDF based feature extraction
 Logistic Regression for binary classification
 Automated logging of offensive tweets into CSV files
 Scalable and low computational cost solution
+
 **Tech Stack**
 Python
 Scikit-learn
 Pandas and NumPy
 TF-IDF Vectorizer
 Tweepy (Twitter API integration)
+
 **Methodology**
 **1. Data Collection**
 Collected labeled dataset of tweets (offensive and non-offensive)
@@ -54,6 +58,7 @@ The system performs efficiently in real-time with low latency and effectively id
 Tweet	Prediction
 You are useless	Offensive
 Have a nice day	Non-offensive
+
 **Future Improvements**
 Integration of deep learning models (BERT, Transformers)
 Multilingual cyberbullying detection
