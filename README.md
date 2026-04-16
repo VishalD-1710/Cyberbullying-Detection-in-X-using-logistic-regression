@@ -1,4 +1,5 @@
 **Cyberbullying Detection on Social Media using Logistic Regression**
+
 **Overview**
 This project focuses on detecting cyberbullying in social media platforms such as X (Twitter) using a Machine Learning approach. The system classifies user-generated text into offensive and non-offensive categories in real time. It combines Logistic Regression with TF-IDF feature extraction to achieve accurate and efficient text classification.
 **Objectives**
