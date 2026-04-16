@@ -28,20 +28,25 @@ Tweepy (Twitter API integration)
 **1. Data Collection**
 Collected labeled dataset of tweets (offensive and non-offensive)
 Integrated Twitter API for real-time data
+
 **2. Preprocessing**
 Converted text to lowercase
 Removed special characters and extra spaces
 Cleaned and normalized input text
+
 **3. Feature Extraction**
 Applied TF-IDF to convert text into numerical vectors
+
 **4. Model Training**
 Trained Logistic Regression model on processed data
 Used threshold-based classification
-5. Real-Time Detection
+
+**5. Real-Time Detection** 
 Retrieved tweets using Twitter API
 Applied preprocessing and TF-IDF
 Classified tweets instantly
-6. Logging and Reporting
+
+**6. Logging and Reporting**
 Stored offensive tweets with metadata
 Generated CSV files for analysis
 
